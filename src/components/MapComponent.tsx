@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
+import type { Marker as LeafletMarker } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { MarkerData } from '../types';
 
@@ -19,15 +20,23 @@ Icon.Default.mergeOptions({
 interface MapComponentProps {
   markers: MarkerData[];
   onMarkerClick: (marker: MarkerData) => void;
+  focusMarkerId?: string | null;
 }
 
 const defaultCenter: [number, number] = [13.7563, 100.5018]; // Bangkok, Thailand
 
 // Component to auto-center map when markers change
-function MapUpdater({ markers }: { markers: MarkerData[] }) {
+function MapUpdater({ markers, focusMarkerId }: { markers: MarkerData[]; focusMarkerId?: string | null }) {
   const map = useMap();
   
   useEffect(() => {
+    if (focusMarkerId) {
+      const focused = markers.find(m => m.id === focusMarkerId);
+      if (focused) {
+        map.flyTo([focused.lat, focused.lng], 15, { duration: 0.5 });
+        return;
+      }
+    }
     if (markers.length > 0) {
       const bounds = markers.map(m => [m.lat, m.lng] as [number, number]);
       if (bounds.length === 1) {
@@ -36,57 +45,77 @@ function MapUpdater({ markers }: { markers: MarkerData[] }) {
         map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
-  }, [markers, map]);
+  }, [markers, map, focusMarkerId]);
 
   return null;
 }
 
-export const MapComponent = ({ markers, onMarkerClick }: MapComponentProps) => {
+const MarkerWithPopup = ({
+  marker,
+  onMarkerClick,
+  isFocused
+}: {
+  marker: MarkerData;
+  onMarkerClick: (marker: MarkerData) => void;
+  isFocused: boolean;
+}) => {
+  const markerRef = useRef<LeafletMarker | null>(null);
+
+  useEffect(() => {
+    if (isFocused && markerRef.current) {
+      markerRef.current.openPopup();
+    }
+  }, [isFocused]);
+
   return (
-    <div style={{ height: '600px', width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
+    <Marker
+      ref={(ref) => {
+        markerRef.current = ref;
+      }}
+      key={marker.id}
+      position={[marker.lat, marker.lng]}
+    >
+      <Popup autoClose={false} closeOnClick={false}>
+        <div className="popup-card">
+          <h3 className="popup-title">{marker.name || 'ไม่มีชื่อ'}</h3>
+          <p className="popup-coords">
+            {marker.lat.toFixed(6)}, {marker.lng.toFixed(6)}
+          </p>
+          <button 
+            onClick={() => onMarkerClick(marker)}
+            className="btn btn-primary btn-full"
+          >
+            แก้ไขข้อมูล
+          </button>
+        </div>
+      </Popup>
+    </Marker>
+  );
+};
+
+export const MapComponent = ({ markers, onMarkerClick, focusMarkerId }: MapComponentProps) => {
+  return (
+    <div className="map-card">
       <MapContainer
         center={defaultCenter}
         zoom={13}
-        style={{ height: '100%', width: '100%' }}
+        className="map-container"
+        closePopupOnClick={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         
-        <MapUpdater markers={markers} />
+        <MapUpdater markers={markers} focusMarkerId={focusMarkerId} />
 
         {markers.map((marker) => (
-          <Marker
+          <MarkerWithPopup
             key={marker.id}
-            position={[marker.lat, marker.lng]}
-          >
-            <Popup>
-              <div style={{ padding: '10px', minWidth: '200px' }}>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#333' }}>
-                  {marker.name || 'ไม่มีชื่อ'}
-                </h3>
-                <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#666' }}>
-                  {marker.lat.toFixed(6)}, {marker.lng.toFixed(6)}
-                </p>
-                <button 
-                  onClick={() => onMarkerClick(marker)}
-                  style={{
-                    padding: '8px 16px',
-                    background: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    width: '100%',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  แก้ไขข้อมูล
-                </button>
-              </div>
-            </Popup>
-          </Marker>
+            marker={marker}
+            onMarkerClick={onMarkerClick}
+            isFocused={marker.id === focusMarkerId}
+          />
         ))}
       </MapContainer>
     </div>

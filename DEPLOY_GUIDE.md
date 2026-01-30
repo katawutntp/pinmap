@@ -73,7 +73,7 @@ const firebaseConfig = {
 เปิด Terminal ในโฟลเดอร์โปรเจค:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/pinmap.git
+git remote add origin https://github.com/katawutntp/pinmap.git
 git branch -M main
 git push -u origin main
 ```

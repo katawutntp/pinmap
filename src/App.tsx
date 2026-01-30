@@ -13,6 +13,7 @@ function App() {
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [focusMarkerId, setFocusMarkerId] = useState<string | null>(null);
 
   // Load markers from Firebase on mount
   useEffect(() => {
@@ -41,6 +42,7 @@ function App() {
   const handleAddLinks = async (links: string[]) => {
     setLoading(true);
     const newMarkers: MarkerData[] = [];
+    let lastCreatedId: string | null = null;
 
     for (const link of links) {
       const coords = extractCoordinates(link);
@@ -60,6 +62,7 @@ function App() {
             googleMapsLink: link,
             name: '',
           });
+          lastCreatedId = docRef.id;
         } catch (error) {
           console.error('Error adding marker:', error);
           alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error);
@@ -71,6 +74,9 @@ function App() {
 
     if (newMarkers.length > 0) {
       setMarkers(prev => [...prev, ...newMarkers]);
+      if (lastCreatedId) {
+        setFocusMarkerId(lastCreatedId);
+      }
     }
     setLoading(false);
   };
@@ -88,6 +94,7 @@ function App() {
           : marker
       ));
       setSelectedMarker(null);
+      setFocusMarkerId(id);
     } catch (error) {
       console.error('Error saving marker:', error);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error);
@@ -114,35 +121,42 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '30px', color: '#333' }}>
-        🗺️ แผนที่ปักหมุด
-      </h1>
+    <div className="app">
+      <header className="app-header">
+        <div className="brand">
+          <span className="brand-icon">🗺️</span>
+          <div>
+            <h1>แผนที่ปักหมุด</h1>
+            <p className="subtitle">ใส่พิกัดหรือลิงก์ Google Maps แล้วปักหมุดทันที</p>
+          </div>
+        </div>
+        <div className="stats">
+          <div className="stat-card">
+            <span className="stat-label">จำนวนหมุด</span>
+            <span className="stat-value">{markers.length}</span>
+          </div>
+        </div>
+      </header>
 
       {error && (
-        <div style={{ padding: '15px', marginBottom: '20px', background: '#fee', borderRadius: '4px', color: '#c00', textAlign: 'center' }}>
+        <div className="alert error">
           {error}
         </div>
       )}
 
-      <LinkInputForm onAddLinks={handleAddLinks} />
+      <div className="content">
+        <LinkInputForm onAddLinks={handleAddLinks} />
 
-      {loading && (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <p>กำลังโหลด...</p>
-        </div>
-      )}
+        {loading && (
+          <div className="loading">กำลังโหลด...</div>
+        )}
 
-      <div style={{ marginBottom: '20px' }}>
-        <p style={{ textAlign: 'center', color: '#666' }}>
-          จำนวนหมุดทั้งหมด: {markers.length} หมุด
-        </p>
+        <MapComponent 
+          markers={markers} 
+          onMarkerClick={setSelectedMarker}
+          focusMarkerId={focusMarkerId}
+        />
       </div>
-
-      <MapComponent 
-        markers={markers} 
-        onMarkerClick={setSelectedMarker}
-      />
 
       <MarkerEditModal
         marker={selectedMarker}
