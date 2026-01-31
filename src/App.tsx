@@ -4,6 +4,7 @@ import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
 import { LinkInputForm } from './components/LinkInputForm';
 import { MarkerEditModal } from './components/MarkerEditModal';
+import { MarkerList } from './components/MarkerList';
 import { extractCoordinates } from './utils/extractCoordinates';
 import type { MarkerData } from './types';
 import './App.css';
@@ -151,11 +152,19 @@ function App() {
           <div className="loading">กำลังโหลด...</div>
         )}
 
-        <MapComponent 
-          markers={markers} 
-          onMarkerClick={setSelectedMarker}
-          focusMarkerId={focusMarkerId}
-        />
+        <div className="map-layout">
+          <MarkerList
+            markers={markers}
+            onSelect={(marker) => setFocusMarkerId(marker.id)}
+            onEdit={setSelectedMarker}
+            focusMarkerId={focusMarkerId}
+          />
+          <MapComponent 
+            markers={markers} 
+            onMarkerClick={setSelectedMarker}
+            focusMarkerId={focusMarkerId}
+          />
+        </div>
       </div>
 
       <MarkerEditModal

@@ -75,17 +75,15 @@ const MarkerWithPopup = ({
       key={marker.id}
       position={[marker.lat, marker.lng]}
     >
-      <Popup autoClose={false} closeOnClick={false}>
-        <div className="popup-card">
-          <h3 className="popup-title">{marker.name || 'ไม่มีชื่อ'}</h3>
-          <p className="popup-coords">
-            {marker.lat.toFixed(6)}, {marker.lng.toFixed(6)}
-          </p>
+      <Popup autoClose={false} closeOnClick={false} className="compact-popup">
+        <div className="popup-mini">
+          <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
           <button 
             onClick={() => onMarkerClick(marker)}
-            className="btn btn-primary btn-full"
+            className="popup-edit-btn"
+            title="แก้ไข"
           >
-            แก้ไขข้อมูล
+            ✏️
           </button>
         </div>
       </Popup>
