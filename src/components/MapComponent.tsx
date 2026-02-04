@@ -77,7 +77,18 @@ const MarkerWithPopup = ({
     >
       <Popup autoClose={false} closeOnClick={false} className="compact-popup">
         <div className="popup-mini">
-          <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
+          {marker.calendarLink ? (
+            <a 
+              href={marker.calendarLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="popup-name popup-link"
+            >
+              {marker.name || 'ไม่มีชื่อ'}
+            </a>
+          ) : (
+            <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
+          )}
           <button 
             onClick={() => onMarkerClick(marker)}
             className="popup-edit-btn"

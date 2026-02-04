@@ -83,15 +83,15 @@ function App() {
   };
 
   // Save marker data
-  const handleSaveMarker = async (id: string, name: string) => {
+  const handleSaveMarker = async (id: string, name: string, calendarLink: string) => {
     setLoading(true);
     try {
       const markerRef = doc(db, 'markers', id);
-      await updateDoc(markerRef, { name });
+      await updateDoc(markerRef, { name, calendarLink });
 
       setMarkers(prev => prev.map(marker => 
         marker.id === id 
-          ? { ...marker, name }
+          ? { ...marker, name, calendarLink }
           : marker
       ));
       setSelectedMarker(null);

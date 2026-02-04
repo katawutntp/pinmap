@@ -4,4 +4,5 @@ export interface MarkerData {
   lng: number;
   name?: string;
   googleMapsLink: string;
+  calendarLink?: string;
 }
