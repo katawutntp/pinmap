@@ -178,6 +178,7 @@ function App() {
               <option value="pattaya">🏖️ พัทยา</option>
               <option value="bangsaen">🌊 บางแสน</option>
               <option value="sattahip">⚓ สัตหีบ</option>
+              <option value="rayong">🏝️ ระยอง</option>
             </select>
           </div>
           <div className="stat-card">

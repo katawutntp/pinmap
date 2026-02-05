@@ -23,6 +23,7 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId, selectedZ
       case 'pattaya': return '🏖️ พัทยา';
       case 'bangsaen': return '🌊 บางแสน';
       case 'sattahip': return '⚓ สัตหีบ';
+      case 'rayong': return '🏝️ ระยอง';
       default: return '';
     }
   };
@@ -32,6 +33,7 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId, selectedZ
       case 'pattaya': return '🏖️ พัทยา';
       case 'bangsaen': return '🌊 บางแสน';
       case 'sattahip': return '⚓ สัตหีบ';
+      case 'rayong': return '🏝️ ระยอง';
       default: return '📍 ทั้งหมด';
     }
   };

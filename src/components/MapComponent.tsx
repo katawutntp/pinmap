@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import type { Marker as LeafletMarker } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { MarkerData } from '../types';
@@ -17,14 +18,32 @@ Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom red pin icon
+// Custom slim pin icon using SVG
 const createPinIcon = () => new DivIcon({
   className: 'custom-pin-marker',
-  html: `<div class="pin-marker-icon"></div>`,
-  iconSize: [24, 36],
-  iconAnchor: [12, 36],
-  popupAnchor: [0, -32],
+  html: `<div class="pin-marker-icon"><svg viewBox="0 0 24 36" width="20" height="30"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#dc2626"/><circle cx="12" cy="12" r="5" fill="white"/></svg></div>`,
+  iconSize: [20, 30],
+  iconAnchor: [10, 30],
+  tooltipAnchor: [0, -25],
 });
+
+// Custom cluster icon
+const createClusterIcon = (count: number) => new DivIcon({
+  className: 'custom-cluster-marker',
+  html: `<div class="cluster-marker-icon">${count}</div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+});
+
+const getZoneLabel = (zone?: string) => {
+  switch(zone) {
+    case 'pattaya': return 'พัทยา';
+    case 'bangsaen': return 'บางแสน';
+    case 'sattahip': return 'สัตหีบ';
+    case 'rayong': return 'ระยอง';
+    default: return '';
+  }
+};
 
 interface MapComponentProps {
   markers: MarkerData[];
@@ -60,7 +79,7 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
   return null;
 }
 
-const MarkerWithPopup = ({
+const MarkerWithTooltip = ({
   marker,
   onMarkerClick,
   isFocused
@@ -73,7 +92,7 @@ const MarkerWithPopup = ({
 
   useEffect(() => {
     if (isFocused && markerRef.current) {
-      markerRef.current.openPopup();
+      markerRef.current.openTooltip();
     }
   }, [isFocused]);
 
@@ -85,46 +104,46 @@ const MarkerWithPopup = ({
       key={marker.id}
       position={[marker.lat, marker.lng]}
       icon={createPinIcon()}
+      eventHandlers={{
+        click: () => onMarkerClick(marker),
+      }}
     >
-      <Popup autoClose={false} closeOnClick={false} className="compact-popup">
-        <div className="popup-mini">
-          <div className="popup-text">
-            {marker.calendarLink ? (
-              <a 
-                href={marker.calendarLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="popup-name popup-link"
-              >
-                {marker.name || 'ไม่มีชื่อ'}
-              </a>
-            ) : (
-              <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
+      <Tooltip 
+        permanent 
+        direction="top" 
+        offset={[0, -25]}
+        className="marker-tooltip"
+      >
+        <div className="tooltip-content">
+          {marker.calendarLink ? (
+            <a 
+              href={marker.calendarLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="tooltip-name"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {marker.name || 'ไม่มีชื่อ'}
+            </a>
+          ) : (
+            <span className="tooltip-name">{marker.name || 'ไม่มีชื่อ'}</span>
+          )}
+          <div className="tooltip-info">
+            {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+              <span className="tooltip-detail">👥{marker.capacity}</span>
             )}
-            <div className="popup-info-row">
-              {typeof marker.capacity === 'number' && marker.capacity > 0 && (
-                <span className="popup-detail">👥{marker.capacity}</span>
-              )}
-              {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
-                <span className="popup-detail">🛏️{marker.bedrooms}</span>
-              )}
-              {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
-                <span className="popup-detail">🚿{marker.bathrooms}</span>
-              )}
-              {marker.zone && (
-                <span className="popup-zone">{marker.zone === 'pattaya' ? 'พัทยา' : marker.zone === 'bangsaen' ? 'บางแสน' : marker.zone === 'sattahip' ? 'สัตหีบ' : ''}</span>
-              )}
-            </div>
+            {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
+              <span className="tooltip-detail">🛏️{marker.bedrooms}</span>
+            )}
+            {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
+              <span className="tooltip-detail">🚿{marker.bathrooms}</span>
+            )}
+            {marker.zone && (
+              <span className="tooltip-zone">{getZoneLabel(marker.zone)}</span>
+            )}
           </div>
-          <button 
-            onClick={() => onMarkerClick(marker)}
-            className="popup-edit-btn"
-            title="แก้ไข"
-          >
-            ✏️
-          </button>
         </div>
-      </Popup>
+      </Tooltip>
     </Marker>
   );
 };
@@ -136,7 +155,6 @@ export const MapComponent = ({ markers, onMarkerClick, focusMarkerId, selectedZo
         center={defaultCenter}
         zoom={13}
         className="map-container"
-        closePopupOnClick={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
@@ -145,14 +163,23 @@ export const MapComponent = ({ markers, onMarkerClick, focusMarkerId, selectedZo
         
         <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
 
-        {markers.map((marker) => (
-          <MarkerWithPopup
-            key={marker.id}
-            marker={marker}
-            onMarkerClick={onMarkerClick}
-            isFocused={marker.id === focusMarkerId}
-          />
-        ))}
+        <MarkerClusterGroup
+          chunkedLoading
+          spiderfyOnMaxZoom
+          showCoverageOnHover={false}
+          maxClusterRadius={40}
+          disableClusteringAtZoom={16}
+          iconCreateFunction={(cluster: any) => createClusterIcon(cluster.getChildCount())}
+        >
+          {markers.map((marker) => (
+            <MarkerWithTooltip
+              key={marker.id}
+              marker={marker}
+              onMarkerClick={onMarkerClick}
+              isFocused={marker.id === focusMarkerId}
+            />
+          ))}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );

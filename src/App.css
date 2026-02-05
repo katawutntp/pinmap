@@ -334,41 +334,95 @@
 
 /* Custom Pin Marker */
 .custom-pin-marker {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
 }
 
 .pin-marker-icon {
-  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-marker-icon svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Cluster Marker */
+.custom-cluster-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cluster-marker-icon {
+  width: 36px;
   height: 36px;
-  position: relative;
-}
-
-.pin-marker-icon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-radius: 50% 50% 50% 0;
-  transform: translateX(-50%) rotate(-45deg);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
-  border: 2px solid #fff;
-}
-
-.pin-marker-icon::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 8px;
-  background: white;
+  background: linear-gradient(135deg, #f36734 0%, #dc2626 100%);
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.4);
+  border: 3px solid white;
+}
+
+/* Tooltip Styles */
+.marker-tooltip {
+  background: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
+  padding: 0 !important;
+}
+
+.marker-tooltip::before {
+  border-top-color: white !important;
+}
+
+.tooltip-content {
+  padding: 6px 10px;
+  min-width: 100px;
+}
+
+.tooltip-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+}
+
+.tooltip-name:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.tooltip-info {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.tooltip-detail {
+  font-size: 10px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.tooltip-zone {
+  font-size: 10px;
+  color: #f36734;
+  background: #fff7ed;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
 }
 
 .popup-edit-btn {
