@@ -114,7 +114,22 @@ const MarkerWithTooltip = ({
       position={[marker.lat, marker.lng]}
       icon={createPinIcon(marker.name)}
       eventHandlers={{
-        click: () => onMarkerClick(marker),
+        click: (e) => {
+          e.originalEvent?.stopPropagation?.();
+          if (!marker.calendarLink) {
+            onMarkerClick(marker);
+          }
+        },
+        mouseover: () => {
+          if (markerRef.current) {
+            markerRef.current.openTooltip();
+          }
+        },
+        mouseout: () => {
+          if (markerRef.current && !isFocused) {
+            markerRef.current.closeTooltip();
+          }
+        }
       }}
     >
       <Tooltip 
