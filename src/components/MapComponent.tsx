@@ -124,11 +124,6 @@ const MarkerWithTooltip = ({
           if (markerRef.current) {
             markerRef.current.openTooltip();
           }
-        },
-        mouseout: () => {
-          if (markerRef.current && !isFocused) {
-            markerRef.current.closeTooltip();
-          }
         }
       }}
     >
