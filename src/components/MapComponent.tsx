@@ -145,8 +145,8 @@ const MarkerWithTooltip = ({
     >
       <Tooltip 
         permanent={true}
-        direction="top" 
-        offset={[(tooltipOffset % 5) * 15 - 30, -30 - (Math.floor(tooltipOffset / 5) % 3) * 20]}
+        direction="right" 
+        offset={[10, -20 * tooltipOffset]}
         className={`marker-tooltip ${isFocused ? 'tooltip-focused tooltip-expanded' : 'tooltip-compact'}`}
         interactive={true}
       >
