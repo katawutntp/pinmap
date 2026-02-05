@@ -5,9 +5,10 @@ interface MarkerListProps {
   onSelect: (marker: MarkerData) => void;
   onEdit: (marker: MarkerData) => void;
   focusMarkerId?: string | null;
+  selectedZone?: string;
 }
 
-export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerListProps) => {
+export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId, selectedZone }: MarkerListProps) => {
   if (markers.length === 0) {
     return (
       <div className="marker-list empty">
@@ -19,17 +20,26 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
 
   const getZoneLabel = (zone?: string) => {
     switch(zone) {
-      case 'pattaya': return 'พัทยา';
-      case 'bangsaen': return 'บางแสน';
-      case 'sattahip': return 'สัตหีบ';
+      case 'pattaya': return '🏖️ พัทยา';
+      case 'bangsaen': return '🌊 บางแสน';
+      case 'sattahip': return '⚓ สัตหีบ';
       default: return '';
+    }
+  };
+
+  const getZoneTitle = (zone?: string) => {
+    switch(zone) {
+      case 'pattaya': return '🏖️ พัทยา';
+      case 'bangsaen': return '🌊 บางแสน';
+      case 'sattahip': return '⚓ สัตหีบ';
+      default: return '📍 ทั้งหมด';
     }
   };
 
   return (
     <div className="marker-list">
       <div className="list-header">
-        <span>📍 รายการหมุด ({markers.length})</span>
+        <span>{getZoneTitle(selectedZone)} ({markers.length})</span>
       </div>
       <div className="list-items">
         {markers.map((marker) => (

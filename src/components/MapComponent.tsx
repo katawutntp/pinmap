@@ -30,12 +30,13 @@ interface MapComponentProps {
   markers: MarkerData[];
   onMarkerClick: (marker: MarkerData) => void;
   focusMarkerId?: string | null;
+  selectedZone?: string;
 }
 
 const defaultCenter: [number, number] = [13.7563, 100.5018]; // Bangkok, Thailand
 
 // Component to auto-center map when markers change
-function MapUpdater({ markers, focusMarkerId }: { markers: MarkerData[]; focusMarkerId?: string | null }) {
+function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerData[]; focusMarkerId?: string | null; selectedZone?: string }) {
   const map = useMap();
   
   useEffect(() => {
@@ -49,12 +50,12 @@ function MapUpdater({ markers, focusMarkerId }: { markers: MarkerData[]; focusMa
     if (markers.length > 0) {
       const bounds = markers.map(m => [m.lat, m.lng] as [number, number]);
       if (bounds.length === 1) {
-        map.setView(bounds[0], 13);
+        map.flyTo(bounds[0], 13, { duration: 0.5 });
       } else {
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.flyToBounds(bounds, { padding: [50, 50], duration: 0.5 });
       }
     }
-  }, [markers, map, focusMarkerId]);
+  }, [markers, map, focusMarkerId, selectedZone]);
 
   return null;
 }
@@ -128,7 +129,7 @@ const MarkerWithPopup = ({
   );
 };
 
-export const MapComponent = ({ markers, onMarkerClick, focusMarkerId }: MapComponentProps) => {
+export const MapComponent = ({ markers, onMarkerClick, focusMarkerId, selectedZone }: MapComponentProps) => {
   return (
     <div className="map-card">
       <MapContainer
@@ -142,7 +143,7 @@ export const MapComponent = ({ markers, onMarkerClick, focusMarkerId }: MapCompo
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         
-        <MapUpdater markers={markers} focusMarkerId={focusMarkerId} />
+        <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
 
         {markers.map((marker) => (
           <MarkerWithPopup

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { collection, addDoc, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
-import { LinkInputForm } from './components/LinkInputForm';
 import { MarkerEditModal } from './components/MarkerEditModal';
 import { MarkerList } from './components/MarkerList';
 import { extractCoordinates } from './utils/extractCoordinates';
@@ -16,6 +15,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusMarkerId, setFocusMarkerId] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string>('all');
   const calendarBaseUrl = 'https://baanpoolvilla-calendar.vercel.app/?house=';
 
   // Load markers from Firebase on mount
@@ -209,10 +209,23 @@ function App() {
             <p className="subtitle">แผนที่บ้านพูลวิลล่า BaanPoolVilla</p>
           </div>
         </div>
-        <div className="stats">
+        <div className="header-controls">
+          <div className="zone-filter">
+            <label>โซน:</label>
+            <select 
+              value={selectedZone} 
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="zone-select"
+            >
+              <option value="all">ทั้งหมด</option>
+              <option value="pattaya">🏖️ พัทยา</option>
+              <option value="bangsaen">🌊 บางแสน</option>
+              <option value="sattahip">⚓ สัตหีบ</option>
+            </select>
+          </div>
           <div className="stat-card">
             <span className="stat-label">จำนวนหมุด</span>
-            <span className="stat-value">{markers.length}</span>
+            <span className="stat-value">{markers.filter(m => selectedZone === 'all' || m.zone === selectedZone).length}</span>
           </div>
         </div>
       </header>
@@ -230,24 +243,29 @@ function App() {
 
         <div className="map-layout">
           <MarkerList
-            markers={markers.map(marker => {
-              const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
-              const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
-              console.log(`🎯 Marker "${marker.name}": key="${key}", normalized="${normalizeKey(key)}", capacity=${capacity}`);
-              return { ...marker, capacity };
-            })}
+            markers={markers
+              .filter(m => selectedZone === 'all' || m.zone === selectedZone)
+              .map(marker => {
+                const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+                const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+                return { ...marker, capacity };
+              })}
             onSelect={(marker) => setFocusMarkerId(marker.id)}
             onEdit={setSelectedMarker}
             focusMarkerId={focusMarkerId}
+            selectedZone={selectedZone}
           />
           <MapComponent 
-            markers={markers.map(marker => {
-              const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
-              const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
-              return { ...marker, capacity };
-            })} 
+            markers={markers
+              .filter(m => selectedZone === 'all' || m.zone === selectedZone)
+              .map(marker => {
+                const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+                const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+                return { ...marker, capacity };
+              })} 
             onMarkerClick={setSelectedMarker}
             focusMarkerId={focusMarkerId}
+            selectedZone={selectedZone}
           />
         </div>
       </div>
