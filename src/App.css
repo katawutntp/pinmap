@@ -339,13 +339,32 @@
 }
 
 .pin-marker-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 36px;
 }
 
 .pin-marker-icon svg {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.pin-label {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 700;
+  color: #dc2626;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
 }
 
 /* Cluster Marker */

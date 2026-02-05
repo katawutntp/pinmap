@@ -18,14 +18,23 @@ Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom slim pin icon using SVG
-const createPinIcon = () => new DivIcon({
-  className: 'custom-pin-marker',
-  html: `<div class="pin-marker-icon"><svg viewBox="0 0 24 36" width="20" height="30"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#dc2626"/><circle cx="12" cy="12" r="5" fill="white"/></svg></div>`,
-  iconSize: [20, 30],
-  iconAnchor: [10, 30],
-  tooltipAnchor: [0, -25],
-});
+// Custom slim pin icon using SVG with label
+const createPinIcon = (label?: string) => {
+  const shortLabel = label ? label.substring(0, 2).toUpperCase() : '📍';
+  return new DivIcon({
+    className: 'custom-pin-marker',
+    html: `<div class="pin-marker-icon">
+      <svg viewBox="0 0 24 36" width="24" height="36">
+        <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#dc2626"/>
+        <circle cx="12" cy="12" r="8" fill="white"/>
+      </svg>
+      <span class="pin-label">${shortLabel}</span>
+    </div>`,
+    iconSize: [24, 36],
+    iconAnchor: [12, 36],
+    tooltipAnchor: [0, -30],
+  });
+};
 
 // Custom cluster icon
 const createClusterIcon = (count: number) => new DivIcon({
@@ -103,13 +112,12 @@ const MarkerWithTooltip = ({
       }}
       key={marker.id}
       position={[marker.lat, marker.lng]}
-      icon={createPinIcon()}
+      icon={createPinIcon(marker.name)}
       eventHandlers={{
         click: () => onMarkerClick(marker),
       }}
     >
       <Tooltip 
-        permanent 
         direction="top" 
         offset={[0, -25]}
         className="marker-tooltip"
