@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from 'react-leaflet';
 import { Icon, DivIcon } from 'leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import type { Marker as LeafletMarker } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { MarkerData } from '../types';
@@ -35,14 +34,6 @@ const createPinIcon = (label?: string) => {
     tooltipAnchor: [0, -30],
   });
 };
-
-// Custom cluster icon
-const createClusterIcon = (count: number) => new DivIcon({
-  className: 'custom-cluster-marker',
-  html: `<div class="cluster-marker-icon">${count}</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-});
 
 const getZoneLabel = (zone?: string) => {
   switch(zone) {
@@ -91,11 +82,13 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
 const MarkerWithTooltip = ({
   marker,
   onMarkerFocus,
-  isFocused
+  isFocused,
+  tooltipOffset = 0
 }: {
   marker: MarkerData;
   onMarkerFocus: (markerId: string) => void;
   isFocused: boolean;
+  tooltipOffset?: number;
 }) => {
   const markerRef = useRef<LeafletMarker | null>(null);
 
@@ -153,7 +146,7 @@ const MarkerWithTooltip = ({
       <Tooltip 
         permanent={true}
         direction="top" 
-        offset={[0, -30]}
+        offset={[(tooltipOffset % 5) * 15 - 30, -30 - (Math.floor(tooltipOffset / 5) % 3) * 20]}
         className={`marker-tooltip ${isFocused ? 'tooltip-focused tooltip-expanded' : 'tooltip-compact'}`}
         interactive={true}
       >
@@ -210,23 +203,15 @@ export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZo
         
         <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
 
-        <MarkerClusterGroup
-          chunkedLoading
-          spiderfyOnMaxZoom
-          showCoverageOnHover={false}
-          maxClusterRadius={40}
-          disableClusteringAtZoom={16}
-          iconCreateFunction={(cluster: any) => createClusterIcon(cluster.getChildCount())}
-        >
-          {markers.map((marker) => (
-            <MarkerWithTooltip
-              key={marker.id}
-              marker={marker}
-              onMarkerFocus={onMarkerFocus}
-              isFocused={marker.id === focusMarkerId}
-            />
-          ))}
-        </MarkerClusterGroup>
+        {markers.map((marker, index) => (
+          <MarkerWithTooltip
+            key={marker.id}
+            marker={marker}
+            onMarkerFocus={onMarkerFocus}
+            isFocused={marker.id === focusMarkerId}
+            tooltipOffset={index}
+          />
+        ))}
       </MapContainer>
     </div>
   );
