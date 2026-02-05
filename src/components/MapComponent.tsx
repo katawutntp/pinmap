@@ -17,13 +17,13 @@ Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom house icon
-const createHouseIcon = () => new DivIcon({
-  className: 'custom-house-marker',
-  html: `<div class="house-marker-icon">🏠</div>`,
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-  popupAnchor: [0, -35],
+// Custom red pin icon
+const createPinIcon = () => new DivIcon({
+  className: 'custom-pin-marker',
+  html: `<div class="pin-marker-icon"></div>`,
+  iconSize: [24, 36],
+  iconAnchor: [12, 36],
+  popupAnchor: [0, -32],
 });
 
 interface MapComponentProps {
@@ -84,7 +84,7 @@ const MarkerWithPopup = ({
       }}
       key={marker.id}
       position={[marker.lat, marker.lng]}
-      icon={createHouseIcon()}
+      icon={createPinIcon()}
     >
       <Popup autoClose={false} closeOnClick={false} className="compact-popup">
         <div className="popup-mini">
