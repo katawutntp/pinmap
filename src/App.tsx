@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
 import { MarkerEditModal } from './components/MarkerEditModal';
@@ -113,49 +113,6 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Add markers from Google Maps links
-  const handleAddLinks = async (links: string[]) => {
-    setLoading(true);
-    const newMarkers: MarkerData[] = [];
-    let lastCreatedId: string | null = null;
-
-    for (const link of links) {
-      const coords = extractCoordinates(link);
-      if (coords) {
-        try {
-          const docRef = await addDoc(collection(db, 'markers'), {
-            lat: coords.lat,
-            lng: coords.lng,
-            googleMapsLink: link,
-            name: '',
-          });
-          
-          newMarkers.push({
-            id: docRef.id,
-            lat: coords.lat,
-            lng: coords.lng,
-            googleMapsLink: link,
-            name: '',
-          });
-          lastCreatedId = docRef.id;
-        } catch (error) {
-          console.error('Error adding marker:', error);
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error);
-        }
-      } else {
-        alert('❌ ไม่สามารถดึงพิกัดได้\n\nกรุณาใช้:\n1. พิกัดโดยตรง เช่น: 13.7500, 100.4913\n2. ลิงค์แบบเต็มจาก Google Maps\n\n⚠️ ลิงค์แบบสั้น (goo.gl) ไม่รองรับ');
-      }
-    }
-
-    if (newMarkers.length > 0) {
-      setMarkers(prev => [...prev, ...newMarkers]);
-      if (lastCreatedId) {
-        setFocusMarkerId(lastCreatedId);
-      }
-    }
-    setLoading(false);
   };
 
   // Save marker data
