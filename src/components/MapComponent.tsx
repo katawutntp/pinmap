@@ -113,6 +113,7 @@ const MarkerWithTooltip = ({
         direction="top" 
         offset={[0, -25]}
         className="marker-tooltip"
+        interactive={true}
       >
         <div className="tooltip-content">
           {marker.calendarLink ? (

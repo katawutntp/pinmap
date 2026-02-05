@@ -376,6 +376,7 @@
   border-radius: 8px !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
   padding: 0 !important;
+  pointer-events: auto !important;
 }
 
 .marker-tooltip::before {
@@ -385,19 +386,21 @@
 .tooltip-content {
   padding: 6px 10px;
   min-width: 100px;
+  pointer-events: auto;
 }
 
 .tooltip-name {
   font-size: 12px;
   font-weight: 600;
-  color: #1e293b;
+  color: #2563eb;
   text-decoration: none;
   display: block;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .tooltip-name:hover {
-  color: #2563eb;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
