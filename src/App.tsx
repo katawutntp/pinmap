@@ -64,6 +64,8 @@ function App() {
           const coords = extractCoordinates(house.location);
           if (coords) {
             const houseKey = house.name || house.code || '';
+            const bedrooms = typeof house.bedrooms === 'number' ? house.bedrooms : parseInt(house.bedrooms || '0', 10);
+            const bathrooms = typeof house.bathrooms === 'number' ? house.bathrooms : parseInt(house.bathrooms || '0', 10);
             calendarMarkers.push({
               id: `calendar-${house.id}`,
               lat: coords.lat,
@@ -72,6 +74,8 @@ function App() {
               googleMapsLink: house.location,
               calendarLink: houseKey ? `${calendarBaseUrl}${encodeURIComponent(houseKey)}` : '',
               capacity: capacity || 0,
+              bedrooms: bedrooms || 0,
+              bathrooms: bathrooms || 0,
             });
           }
         }

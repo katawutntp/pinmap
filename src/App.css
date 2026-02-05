@@ -260,6 +260,39 @@
   width: fit-content;
 }
 
+.popup-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.popup-detail {
+  font-size: 11px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+/* Custom House Marker */
+.custom-house-marker {
+  background: transparent;
+  border: none;
+}
+
+.house-marker-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 2px solid #f36734;
+}
+
 .popup-edit-btn {
   background: none;
   border: none;
@@ -463,6 +496,20 @@
 .item-capacity {
   font-size: 12px;
   color: #64748b;
+}
+
+.item-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.item-detail {
+  font-size: 11px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 .item-coords {

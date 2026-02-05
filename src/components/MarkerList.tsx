@@ -31,9 +31,17 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
           >
             <div className="item-info">
               <span className="item-name">{marker.name || 'ไม่มีชื่อ'}</span>
-              {typeof marker.capacity === 'number' && marker.capacity > 0 && (
-                <span className="item-capacity">👥 {marker.capacity} คน</span>
-              )}
+              <div className="item-details">
+                {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+                  <span className="item-detail">👥 {marker.capacity}</span>
+                )}
+                {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
+                  <span className="item-detail">🛏️ {marker.bedrooms}</span>
+                )}
+                {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
+                  <span className="item-detail">🚿 {marker.bathrooms}</span>
+                )}
+              </div>
               <span className="item-coords">
                 {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
               </span>

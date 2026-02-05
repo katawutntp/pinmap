@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { Icon, DivIcon } from 'leaflet';
 import type { Marker as LeafletMarker } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { MarkerData } from '../types';
@@ -15,6 +15,15 @@ Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
+});
+
+// Custom house icon
+const createHouseIcon = () => new DivIcon({
+  className: 'custom-house-marker',
+  html: `<div class="house-marker-icon">🏠</div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -35],
 });
 
 interface MapComponentProps {
@@ -74,6 +83,7 @@ const MarkerWithPopup = ({
       }}
       key={marker.id}
       position={[marker.lat, marker.lng]}
+      icon={createHouseIcon()}
     >
       <Popup autoClose={false} closeOnClick={false} className="compact-popup">
         <div className="popup-mini">
@@ -90,9 +100,17 @@ const MarkerWithPopup = ({
             ) : (
               <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
             )}
-            {typeof marker.capacity === 'number' && marker.capacity > 0 && (
-              <span className="popup-capacity">👥 {marker.capacity} คน</span>
-            )}
+            <div className="popup-details">
+              {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+                <span className="popup-detail">👥 {marker.capacity}</span>
+              )}
+              {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
+                <span className="popup-detail">🛏️ {marker.bedrooms}</span>
+              )}
+              {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
+                <span className="popup-detail">🚿 {marker.bathrooms}</span>
+              )}
+            </div>
           </div>
           <button 
             onClick={() => onMarkerClick(marker)}

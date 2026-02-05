@@ -6,4 +6,6 @@ export interface MarkerData {
   googleMapsLink: string;
   calendarLink?: string;
   capacity?: number;
+  bedrooms?: number;
+  bathrooms?: number;
 }
