@@ -99,22 +99,20 @@ const MarkerWithTooltip = ({
 }) => {
   const markerRef = useRef<LeafletMarker | null>(null);
 
-  useEffect(() => {
-    if (markerRef.current) {
-      if (isFocused) {
-        markerRef.current.openTooltip();
-      }
-    }
-  }, [isFocused]);
-
-  // Keep tooltip open when focused
+  // Open tooltip when focused (from list click or marker click)
   useEffect(() => {
     if (isFocused && markerRef.current) {
-      const tooltip = markerRef.current.getTooltip();
-      if (tooltip) {
-        (tooltip as any).options.permanent = true;
-        markerRef.current.openTooltip();
-      }
+      // Small delay to ensure tooltip is ready after cluster unspiderfy
+      const timer = setTimeout(() => {
+        if (markerRef.current) {
+          const tooltip = markerRef.current.getTooltip();
+          if (tooltip) {
+            (tooltip as any).options.permanent = true;
+          }
+          markerRef.current.openTooltip();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [isFocused]);
 
@@ -122,6 +120,16 @@ const MarkerWithTooltip = ({
     <Marker
       ref={(ref) => {
         markerRef.current = ref;
+        // Open tooltip immediately if already focused when ref is set
+        if (isFocused && ref) {
+          setTimeout(() => {
+            const tooltip = ref.getTooltip();
+            if (tooltip) {
+              (tooltip as any).options.permanent = true;
+            }
+            ref.openTooltip();
+          }, 150);
+        }
       }}
       key={marker.id}
       position={[marker.lat, marker.lng]}
