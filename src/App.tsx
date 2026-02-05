@@ -39,16 +39,27 @@ function App() {
   const loadCalendarHouses = async () => {
     try {
       const res = await fetch('https://baanpoolvilla-calendar.vercel.app/api/houses');
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error('Failed to fetch houses:', res.status);
+        return;
+      }
       const houses = await res.json();
+      console.log('📦 Loaded houses from calendar:', houses);
       if (!Array.isArray(houses)) return;
 
       const lookup: Record<string, number> = {};
       houses.forEach((house) => {
         const capacity = typeof house.capacity === 'number' ? house.capacity : parseInt(house.capacity || '0', 10);
-        if (house.name) lookup[normalizeKey(house.name)] = capacity || 0;
-        if (house.code) lookup[normalizeKey(house.code)] = capacity || 0;
+        if (house.name) {
+          lookup[normalizeKey(house.name)] = capacity || 0;
+          console.log(`  📍 Mapped name: "${house.name}" → ${capacity} คน`);
+        }
+        if (house.code) {
+          lookup[normalizeKey(house.code)] = capacity || 0;
+          console.log(`  🔑 Mapped code: "${house.code}" → ${capacity} คน`);
+        }
       });
+      console.log('📋 Final lookup table:', lookup);
       setHouseLookup(lookup);
     } catch (error) {
       console.error('Error loading calendar houses:', error);
@@ -193,6 +204,7 @@ function App() {
             markers={markers.map(marker => {
               const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
               const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+              console.log(`🎯 Marker "${marker.name}": key="${key}", normalized="${normalizeKey(key)}", capacity=${capacity}`);
               return { ...marker, capacity };
             })}
             onSelect={(marker) => setFocusMarkerId(marker.id)}
