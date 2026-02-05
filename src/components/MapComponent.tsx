@@ -56,7 +56,7 @@ const getZoneLabel = (zone?: string) => {
 
 interface MapComponentProps {
   markers: MarkerData[];
-  onMarkerClick: (marker: MarkerData) => void;
+  onMarkerFocus: (markerId: string) => void;
   focusMarkerId?: string | null;
   selectedZone?: string;
 }
@@ -90,11 +90,11 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
 
 const MarkerWithTooltip = ({
   marker,
-  onMarkerClick,
+  onMarkerFocus,
   isFocused
 }: {
   marker: MarkerData;
-  onMarkerClick: (marker: MarkerData) => void;
+  onMarkerFocus: (markerId: string) => void;
   isFocused: boolean;
 }) => {
   const markerRef = useRef<LeafletMarker | null>(null);
@@ -116,9 +116,8 @@ const MarkerWithTooltip = ({
       eventHandlers={{
         click: (e) => {
           e.originalEvent?.stopPropagation?.();
-          if (!marker.calendarLink) {
-            onMarkerClick(marker);
-          }
+          // Always focus to keep tooltip open
+          onMarkerFocus(marker.id);
         },
         mouseover: () => {
           if (markerRef.current) {
@@ -168,7 +167,7 @@ const MarkerWithTooltip = ({
   );
 };
 
-export const MapComponent = ({ markers, onMarkerClick, focusMarkerId, selectedZone }: MapComponentProps) => {
+export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZone }: MapComponentProps) => {
   return (
     <div className="map-card">
       <MapContainer
@@ -195,7 +194,7 @@ export const MapComponent = ({ markers, onMarkerClick, focusMarkerId, selectedZo
             <MarkerWithTooltip
               key={marker.id}
               marker={marker}
-              onMarkerClick={onMarkerClick}
+              onMarkerFocus={onMarkerFocus}
               isFocused={marker.id === focusMarkerId}
             />
           ))}

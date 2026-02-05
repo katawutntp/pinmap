@@ -221,7 +221,7 @@ function App() {
                 const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
                 return { ...marker, capacity };
               })} 
-            onMarkerClick={setSelectedMarker}
+            onMarkerFocus={(markerId) => setFocusMarkerId(markerId)}
             focusMarkerId={focusMarkerId}
             selectedZone={selectedZone}
           />
