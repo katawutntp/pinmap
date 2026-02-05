@@ -48,19 +48,45 @@ function App() {
       if (!Array.isArray(houses)) return;
 
       const lookup: Record<string, number> = {};
+      const calendarMarkers: MarkerData[] = [];
+      
       houses.forEach((house) => {
         const capacity = typeof house.capacity === 'number' ? house.capacity : parseInt(house.capacity || '0', 10);
         if (house.name) {
           lookup[normalizeKey(house.name)] = capacity || 0;
-          console.log(`  📍 Mapped name: "${house.name}" → ${capacity} คน`);
         }
         if (house.code) {
           lookup[normalizeKey(house.code)] = capacity || 0;
-          console.log(`  🔑 Mapped code: "${house.code}" → ${capacity} คน`);
+        }
+        
+        // ถ้ามี location ให้สร้าง marker อัตโนมัติ
+        if (house.location) {
+          const coords = extractCoordinates(house.location);
+          if (coords) {
+            const houseKey = house.name || house.code || '';
+            calendarMarkers.push({
+              id: `calendar-${house.id}`,
+              lat: coords.lat,
+              lng: coords.lng,
+              name: house.name || '',
+              googleMapsLink: house.location,
+              calendarLink: houseKey ? `${calendarBaseUrl}${encodeURIComponent(houseKey)}` : '',
+              capacity: capacity || 0,
+            });
+          }
         }
       });
+      
       console.log('📋 Final lookup table:', lookup);
+      console.log('🏠 Calendar markers:', calendarMarkers);
       setHouseLookup(lookup);
+      
+      // รวม markers จาก Calendar กับ markers จาก Firebase
+      setMarkers(prev => {
+        // กรอง markers จาก Calendar เก่าออก แล้วเพิ่มใหม่
+        const firebaseMarkers = prev.filter(m => !m.id.startsWith('calendar-'));
+        return [...firebaseMarkers, ...calendarMarkers];
+      });
     } catch (error) {
       console.error('Error loading calendar houses:', error);
     }
