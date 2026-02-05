@@ -398,6 +398,12 @@
   pointer-events: auto !important;
 }
 
+.marker-tooltip.tooltip-focused {
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3) !important;
+  border: 2px solid #2563eb !important;
+  z-index: 1000 !important;
+}
+
 .marker-tooltip::before {
   border-top-color: white !important;
 }

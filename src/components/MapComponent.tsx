@@ -100,8 +100,21 @@ const MarkerWithTooltip = ({
   const markerRef = useRef<LeafletMarker | null>(null);
 
   useEffect(() => {
+    if (markerRef.current) {
+      if (isFocused) {
+        markerRef.current.openTooltip();
+      }
+    }
+  }, [isFocused]);
+
+  // Keep tooltip open when focused
+  useEffect(() => {
     if (isFocused && markerRef.current) {
-      markerRef.current.openTooltip();
+      const tooltip = markerRef.current.getTooltip();
+      if (tooltip) {
+        (tooltip as any).options.permanent = true;
+        markerRef.current.openTooltip();
+      }
     }
   }, [isFocused]);
 
@@ -116,8 +129,11 @@ const MarkerWithTooltip = ({
       eventHandlers={{
         click: (e) => {
           e.originalEvent?.stopPropagation?.();
-          // Always focus to keep tooltip open
           onMarkerFocus(marker.id);
+          // Force open tooltip
+          if (markerRef.current) {
+            markerRef.current.openTooltip();
+          }
         },
         mouseover: () => {
           if (markerRef.current) {
@@ -127,10 +143,9 @@ const MarkerWithTooltip = ({
       }}
     >
       <Tooltip 
-        permanent={isFocused}
         direction="top" 
-        offset={[0, -25]}
-        className="marker-tooltip"
+        offset={[0, -30]}
+        className={`marker-tooltip ${isFocused ? 'tooltip-focused' : ''}`}
         interactive={true}
       >
         <div className="tooltip-content">
