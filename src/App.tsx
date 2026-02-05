@@ -11,15 +11,49 @@ import './App.css';
 
 function App() {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [houseLookup, setHouseLookup] = useState<Record<string, number>>({});
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusMarkerId, setFocusMarkerId] = useState<string | null>(null);
+  const calendarBaseUrl = 'https://baanpoolvilla-calendar.vercel.app/?house=';
 
   // Load markers from Firebase on mount
   useEffect(() => {
     loadMarkers();
+    loadCalendarHouses();
   }, []);
+
+  const normalizeKey = (value?: string | null) => (value || '').toLowerCase().trim();
+
+  const getHouseKeyFromLink = (link?: string | null) => {
+    if (!link) return '';
+    try {
+      const url = new URL(link);
+      return url.searchParams.get('house') || '';
+    } catch (error) {
+      return '';
+    }
+  };
+
+  const loadCalendarHouses = async () => {
+    try {
+      const res = await fetch('https://baanpoolvilla-calendar.vercel.app/api/houses');
+      if (!res.ok) return;
+      const houses = await res.json();
+      if (!Array.isArray(houses)) return;
+
+      const lookup: Record<string, number> = {};
+      houses.forEach((house) => {
+        const capacity = typeof house.capacity === 'number' ? house.capacity : parseInt(house.capacity || '0', 10);
+        if (house.name) lookup[normalizeKey(house.name)] = capacity || 0;
+        if (house.code) lookup[normalizeKey(house.code)] = capacity || 0;
+      });
+      setHouseLookup(lookup);
+    } catch (error) {
+      console.error('Error loading calendar houses:', error);
+    }
+  };
 
   const loadMarkers = async () => {
     try {
@@ -83,9 +117,11 @@ function App() {
   };
 
   // Save marker data
-  const handleSaveMarker = async (id: string, name: string, calendarLink: string) => {
+  const handleSaveMarker = async (id: string, name: string, calendarHouseKey: string) => {
     setLoading(true);
     try {
+      const trimmedKey = calendarHouseKey.trim();
+      const calendarLink = trimmedKey ? `${calendarBaseUrl}${encodeURIComponent(trimmedKey)}` : '';
       const markerRef = doc(db, 'markers', id);
       await updateDoc(markerRef, { name, calendarLink });
 
@@ -154,13 +190,21 @@ function App() {
 
         <div className="map-layout">
           <MarkerList
-            markers={markers}
+            markers={markers.map(marker => {
+              const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+              const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+              return { ...marker, capacity };
+            })}
             onSelect={(marker) => setFocusMarkerId(marker.id)}
             onEdit={setSelectedMarker}
             focusMarkerId={focusMarkerId}
           />
           <MapComponent 
-            markers={markers} 
+            markers={markers.map(marker => {
+              const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+              const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+              return { ...marker, capacity };
+            })} 
             onMarkerClick={setSelectedMarker}
             focusMarkerId={focusMarkerId}
           />

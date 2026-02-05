@@ -89,6 +89,9 @@ const MarkerWithPopup = ({
           ) : (
             <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
           )}
+          {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+            <span className="popup-capacity">👥 {marker.capacity} คน</span>
+          )}
           <button 
             onClick={() => onMarkerClick(marker)}
             className="popup-edit-btn"

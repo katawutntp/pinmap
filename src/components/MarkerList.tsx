@@ -31,6 +31,9 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
           >
             <div className="item-info">
               <span className="item-name">{marker.name || 'ไม่มีชื่อ'}</span>
+              {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+                <span className="item-capacity">👥 {marker.capacity} คน</span>
+              )}
               <span className="item-coords">
                 {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
               </span>

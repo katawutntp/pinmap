@@ -5,4 +5,5 @@ export interface MarkerData {
   name?: string;
   googleMapsLink: string;
   calendarLink?: string;
+  capacity?: number;
 }
