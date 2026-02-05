@@ -154,7 +154,7 @@ const MarkerWithTooltip = ({
         permanent={true}
         direction="top" 
         offset={[0, -30]}
-        className={`marker-tooltip ${isFocused ? 'tooltip-focused' : ''}`}
+        className={`marker-tooltip ${isFocused ? 'tooltip-focused tooltip-expanded' : 'tooltip-compact'}`}
         interactive={true}
       >
         <div className="tooltip-content">
@@ -166,25 +166,29 @@ const MarkerWithTooltip = ({
               className="tooltip-name"
               onClick={(e) => e.stopPropagation()}
             >
-              {marker.name || 'ไม่มีชื่อ'}
+              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
             </a>
           ) : (
-            <span className="tooltip-name">{marker.name || 'ไม่มีชื่อ'}</span>
+            <span className="tooltip-name">
+              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
+            </span>
           )}
-          <div className="tooltip-info">
-            {typeof marker.capacity === 'number' && marker.capacity > 0 && (
-              <span className="tooltip-detail">👥{marker.capacity}</span>
-            )}
-            {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
-              <span className="tooltip-detail">🛏️{marker.bedrooms}</span>
-            )}
-            {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
-              <span className="tooltip-detail">🚿{marker.bathrooms}</span>
-            )}
-            {marker.zone && (
-              <span className="tooltip-zone">{getZoneLabel(marker.zone)}</span>
-            )}
-          </div>
+          {isFocused && (
+            <div className="tooltip-info">
+              {typeof marker.capacity === 'number' && marker.capacity > 0 && (
+                <span className="tooltip-detail">👥{marker.capacity}</span>
+              )}
+              {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
+                <span className="tooltip-detail">🛏️{marker.bedrooms}</span>
+              )}
+              {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
+                <span className="tooltip-detail">🚿{marker.bathrooms}</span>
+              )}
+              {marker.zone && (
+                <span className="tooltip-zone">{getZoneLabel(marker.zone)}</span>
+              )}
+            </div>
+          )}
         </div>
       </Tooltip>
     </Marker>

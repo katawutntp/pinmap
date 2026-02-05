@@ -392,10 +392,23 @@
 .marker-tooltip {
   background: white !important;
   border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
   padding: 0 !important;
   pointer-events: auto !important;
+}
+
+.marker-tooltip.tooltip-compact {
+  opacity: 0.95;
+}
+
+.marker-tooltip.tooltip-compact .tooltip-content {
+  padding: 3px 6px;
+  min-width: auto;
+}
+
+.marker-tooltip.tooltip-compact .tooltip-name {
+  font-size: 10px;
 }
 
 .marker-tooltip.tooltip-focused {
@@ -404,18 +417,23 @@
   z-index: 1000 !important;
 }
 
+.marker-tooltip.tooltip-expanded .tooltip-content {
+  padding: 8px 12px;
+  min-width: 120px;
+}
+
 .marker-tooltip::before {
   border-top-color: white !important;
 }
 
 .tooltip-content {
-  padding: 6px 10px;
-  min-width: 100px;
+  padding: 4px 8px;
+  min-width: 80px;
   pointer-events: auto;
 }
 
 .tooltip-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #2563eb;
   text-decoration: none;
