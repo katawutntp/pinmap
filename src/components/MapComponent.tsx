@@ -82,12 +82,24 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
 const MarkerWithTooltip = ({
   marker,
   onMarkerFocus,
-  isFocused
+  isFocused,
+  tooltipIndex
 }: {
   marker: MarkerData;
   onMarkerFocus: (markerId: string) => void;
   isFocused: boolean;
+  tooltipIndex: number;
 }) => {
+  // Alternate tooltip direction and offset to prevent overlap
+  const directions: Array<'right' | 'left' | 'top' | 'bottom'> = ['right', 'top', 'left', 'bottom'];
+  const direction = directions[tooltipIndex % 4];
+  const offsets: Record<string, [number, number]> = {
+    'right': [12, 0],
+    'left': [-12, 0],
+    'top': [0, -12],
+    'bottom': [0, 12]
+  };
+  const offset = offsets[direction];
   const markerRef = useRef<LeafletMarker | null>(null);
 
   // Open tooltip when focused (from list click or marker click)
@@ -143,8 +155,8 @@ const MarkerWithTooltip = ({
     >
       <Tooltip 
         permanent={true}
-        direction="right" 
-        offset={[10, 0]}
+        direction={direction} 
+        offset={offset}
         className={`marker-tooltip ${isFocused ? 'tooltip-focused tooltip-expanded' : 'tooltip-compact'}`}
         interactive={true}
       >
@@ -201,12 +213,13 @@ export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZo
         
         <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
 
-        {markers.map((marker) => (
+        {markers.map((marker, index) => (
           <MarkerWithTooltip
             key={marker.id}
             marker={marker}
             onMarkerFocus={onMarkerFocus}
             isFocused={marker.id === focusMarkerId}
+            tooltipIndex={index}
           />
         ))}
       </MapContainer>
