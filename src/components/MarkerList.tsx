@@ -12,10 +12,19 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
     return (
       <div className="marker-list empty">
         <p>ยังไม่มีหมุด</p>
-        <p className="hint">เพิ่มพิกัดด้านบนเพื่อเริ่มต้น</p>
+        <p className="hint">เพิ่มตำแหน่งในปฏิทิน</p>
       </div>
     );
   }
+
+  const getZoneLabel = (zone?: string) => {
+    switch(zone) {
+      case 'pattaya': return 'พัทยา';
+      case 'bangsaen': return 'บางแสน';
+      case 'sattahip': return 'สัตหีบ';
+      default: return '';
+    }
+  };
 
   return (
     <div className="marker-list">
@@ -30,7 +39,10 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
             onClick={() => onSelect(marker)}
           >
             <div className="item-info">
-              <span className="item-name">{marker.name || 'ไม่มีชื่อ'}</span>
+              <div className="item-header">
+                <span className="item-name">{marker.name || 'ไม่มีชื่อ'}</span>
+                {marker.zone && <span className="item-zone">{getZoneLabel(marker.zone)}</span>}
+              </div>
               <div className="item-details">
                 {typeof marker.capacity === 'number' && marker.capacity > 0 && (
                   <span className="item-detail">👥 {marker.capacity}</span>
@@ -42,9 +54,6 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId }: MarkerL
                   <span className="item-detail">🚿 {marker.bathrooms}</span>
                 )}
               </div>
-              <span className="item-coords">
-                {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
-              </span>
             </div>
             <button
               className="item-edit"

@@ -100,15 +100,18 @@ const MarkerWithPopup = ({
             ) : (
               <span className="popup-name">{marker.name || 'ไม่มีชื่อ'}</span>
             )}
-            <div className="popup-details">
+            <div className="popup-info-row">
               {typeof marker.capacity === 'number' && marker.capacity > 0 && (
-                <span className="popup-detail">👥 {marker.capacity}</span>
+                <span className="popup-detail">👥{marker.capacity}</span>
               )}
               {typeof marker.bedrooms === 'number' && marker.bedrooms > 0 && (
-                <span className="popup-detail">🛏️ {marker.bedrooms}</span>
+                <span className="popup-detail">🛏️{marker.bedrooms}</span>
               )}
               {typeof marker.bathrooms === 'number' && marker.bathrooms > 0 && (
-                <span className="popup-detail">🚿 {marker.bathrooms}</span>
+                <span className="popup-detail">🚿{marker.bathrooms}</span>
+              )}
+              {marker.zone && (
+                <span className="popup-zone">{marker.zone === 'pattaya' ? 'พัทยา' : marker.zone === 'bangsaen' ? 'บางแสน' : marker.zone === 'sattahip' ? 'สัตหีบ' : ''}</span>
               )}
             </div>
           </div>

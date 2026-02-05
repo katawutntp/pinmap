@@ -8,4 +8,5 @@ export interface MarkerData {
   capacity?: number;
   bedrooms?: number;
   bathrooms?: number;
+  zone?: string;
 }

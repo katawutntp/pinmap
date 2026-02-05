@@ -76,6 +76,7 @@ function App() {
               capacity: capacity || 0,
               bedrooms: bedrooms || 0,
               bathrooms: bathrooms || 0,
+              zone: house.zone || '',
             });
           }
         }
@@ -205,7 +206,7 @@ function App() {
           <span className="brand-icon">🗺️</span>
           <div>
             <h1>แผนที่ปักหมุด</h1>
-            <p className="subtitle">ใส่พิกัดหรือลิงก์ Google Maps แล้วปักหมุดทันที</p>
+            <p className="subtitle">แผนที่บ้านพูลวิลล่า BaanPoolVilla</p>
           </div>
         </div>
         <div className="stats">
@@ -223,8 +224,6 @@ function App() {
       )}
 
       <div className="content">
-        <LinkInputForm onAddLinks={handleAddLinks} />
-
         {loading && (
           <div className="loading">กำลังโหลด...</div>
         )}
