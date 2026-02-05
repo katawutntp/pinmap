@@ -82,13 +82,11 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
 const MarkerWithTooltip = ({
   marker,
   onMarkerFocus,
-  isFocused,
-  tooltipOffset = 0
+  isFocused
 }: {
   marker: MarkerData;
   onMarkerFocus: (markerId: string) => void;
   isFocused: boolean;
-  tooltipOffset?: number;
 }) => {
   const markerRef = useRef<LeafletMarker | null>(null);
 
@@ -203,13 +201,12 @@ export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZo
         
         <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
 
-        {markers.map((marker, index) => (
+        {markers.map((marker) => (
           <MarkerWithTooltip
             key={marker.id}
             marker={marker}
             onMarkerFocus={onMarkerFocus}
             isFocused={marker.id === focusMarkerId}
-            tooltipOffset={index}
           />
         ))}
       </MapContainer>
