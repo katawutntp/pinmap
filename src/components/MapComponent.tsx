@@ -128,6 +128,7 @@ const MarkerWithTooltip = ({
       }}
     >
       <Tooltip 
+        permanent={isFocused}
         direction="top" 
         offset={[0, -25]}
         className="marker-tooltip"
