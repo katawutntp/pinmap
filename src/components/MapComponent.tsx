@@ -151,6 +151,7 @@ const MarkerWithTooltip = ({
       }}
     >
       <Tooltip 
+        permanent={true}
         direction="top" 
         offset={[0, -30]}
         className={`marker-tooltip ${isFocused ? 'tooltip-focused' : ''}`}
