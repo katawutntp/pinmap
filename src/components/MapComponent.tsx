@@ -45,6 +45,53 @@ const getZoneLabel = (zone?: string) => {
   }
 };
 
+// Calculate distance between two points in degrees
+const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
+};
+
+// Offset overlapping markers in a spiral pattern
+const spreadOverlappingMarkers = (markers: MarkerData[]): (MarkerData & { adjustedLat: number; adjustedLng: number; tooltipDir: number })[] => {
+  const threshold = 0.0008; // ~80 meters - markers closer than this will be spread
+  const offsetAmount = 0.0006; // ~60 meters offset
+  
+  // Group markers by proximity
+  const processed: (MarkerData & { adjustedLat: number; adjustedLng: number; tooltipDir: number })[] = [];
+  
+  markers.forEach((marker, idx) => {
+    let adjustedLat = marker.lat;
+    let adjustedLng = marker.lng;
+    let tooltipDir = idx % 4;
+    
+    // Check against all previously processed markers
+    let overlapCount = 0;
+    for (const pm of processed) {
+      const dist = getDistance(adjustedLat, adjustedLng, pm.adjustedLat, pm.adjustedLng);
+      if (dist < threshold) {
+        overlapCount++;
+      }
+    }
+    
+    // If overlapping, spread out in a spiral pattern
+    if (overlapCount > 0) {
+      const angle = (overlapCount * 90 + 45) * (Math.PI / 180); // 45, 135, 225, 315 degrees
+      const radius = offsetAmount * Math.ceil(overlapCount / 4);
+      adjustedLat = marker.lat + radius * Math.sin(angle);
+      adjustedLng = marker.lng + radius * Math.cos(angle);
+      tooltipDir = overlapCount % 4; // Alternate tooltip direction
+    }
+    
+    processed.push({
+      ...marker,
+      adjustedLat,
+      adjustedLng,
+      tooltipDir
+    });
+  });
+  
+  return processed;
+};
+
 interface MapComponentProps {
   markers: MarkerData[];
   onMarkerFocus: (markerId: string) => void;
@@ -85,16 +132,20 @@ const MarkerWithTooltip = ({
   marker,
   onMarkerFocus,
   isFocused,
-  tooltipIndex
+  tooltipDir,
+  adjustedLat,
+  adjustedLng
 }: {
   marker: MarkerData;
   onMarkerFocus: (markerId: string) => void;
   isFocused: boolean;
-  tooltipIndex: number;
+  tooltipDir: number;
+  adjustedLat: number;
+  adjustedLng: number;
 }) => {
   // Alternate tooltip direction and offset to prevent overlap
   const directions: Array<'right' | 'left' | 'top' | 'bottom'> = ['right', 'top', 'left', 'bottom'];
-  const direction = directions[tooltipIndex % 4];
+  const direction = directions[tooltipDir % 4];
   const offsets: Record<string, [number, number]> = {
     'right': [12, 0],
     'left': [-12, 0],
@@ -137,7 +188,7 @@ const MarkerWithTooltip = ({
         }
       }}
       key={marker.id}
-      position={[marker.lat, marker.lng]}
+      position={[adjustedLat, adjustedLng]}
       icon={createPinIcon(marker.name)}
       eventHandlers={{
         click: (e) => {
@@ -201,6 +252,9 @@ const MarkerWithTooltip = ({
 };
 
 export const MapComponent = ({ markers, onMarkerFocus, focusedMarkerIds, selectedZone }: MapComponentProps) => {
+  // Spread overlapping markers
+  const spreadMarkers = spreadOverlappingMarkers(markers);
+  
   return (
     <div className="map-card">
       <MapContainer
@@ -215,13 +269,15 @@ export const MapComponent = ({ markers, onMarkerFocus, focusedMarkerIds, selecte
         
         <MapUpdater markers={markers} focusedMarkerIds={focusedMarkerIds} selectedZone={selectedZone} />
 
-        {markers.map((marker, index) => (
+        {spreadMarkers.map((marker) => (
           <MarkerWithTooltip
             key={marker.id}
             marker={marker}
             onMarkerFocus={onMarkerFocus}
             isFocused={focusedMarkerIds?.includes(marker.id) ?? false}
-            tooltipIndex={index}
+            tooltipDir={marker.tooltipDir}
+            adjustedLat={marker.adjustedLat}
+            adjustedLng={marker.adjustedLng}
           />
         ))}
       </MapContainer>
