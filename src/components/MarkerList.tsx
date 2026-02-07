@@ -4,11 +4,11 @@ interface MarkerListProps {
   markers: MarkerData[];
   onSelect: (marker: MarkerData) => void;
   onEdit: (marker: MarkerData) => void;
-  focusMarkerId?: string | null;
+  focusedMarkerIds?: string[];
   selectedZone?: string;
 }
 
-export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId, selectedZone }: MarkerListProps) => {
+export const MarkerList = ({ markers, onSelect, onEdit, focusedMarkerIds, selectedZone }: MarkerListProps) => {
   if (markers.length === 0) {
     return (
       <div className="marker-list empty">
@@ -47,7 +47,7 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusMarkerId, selectedZ
         {markers.map((marker) => (
           <div
             key={marker.id}
-            className={`list-item ${marker.id === focusMarkerId ? 'active' : ''}`}
+            className={`list-item ${focusedMarkerIds?.includes(marker.id) ? 'active' : ''}`}
             onClick={() => onSelect(marker)}
           >
             <div className="item-info">

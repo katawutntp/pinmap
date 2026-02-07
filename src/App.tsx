@@ -14,7 +14,7 @@ function App() {
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [focusMarkerId, setFocusMarkerId] = useState<string | null>(null);
+  const [focusedMarkerIds, setFocusedMarkerIds] = useState<string[]>([]);
   const [selectedZone, setSelectedZone] = useState<string>('all');
   const calendarBaseUrl = 'https://baanpoolvilla-calendar.vercel.app/?house=';
 
@@ -130,7 +130,7 @@ function App() {
           : marker
       ));
       setSelectedMarker(null);
-      setFocusMarkerId(id);
+      setFocusedMarkerIds(prev => prev.includes(id) ? prev : [...prev, id]);
     } catch (error) {
       console.error('Error saving marker:', error);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error);
@@ -208,9 +208,13 @@ function App() {
                 const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
                 return { ...marker, capacity };
               })}
-            onSelect={(marker) => setFocusMarkerId(marker.id)}
+            onSelect={(marker) => setFocusedMarkerIds(prev => 
+              prev.includes(marker.id) 
+                ? prev.filter(id => id !== marker.id) 
+                : [...prev, marker.id]
+            )}
             onEdit={setSelectedMarker}
-            focusMarkerId={focusMarkerId}
+            focusedMarkerIds={focusedMarkerIds}
             selectedZone={selectedZone}
           />
           <MapComponent 
@@ -221,8 +225,12 @@ function App() {
                 const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
                 return { ...marker, capacity };
               })} 
-            onMarkerFocus={(markerId) => setFocusMarkerId(markerId)}
-            focusMarkerId={focusMarkerId}
+            onMarkerFocus={(markerId) => setFocusedMarkerIds(prev => 
+              prev.includes(markerId) 
+                ? prev.filter(id => id !== markerId) 
+                : [...prev, markerId]
+            )}
+            focusedMarkerIds={focusedMarkerIds}
             selectedZone={selectedZone}
           />
         </div>

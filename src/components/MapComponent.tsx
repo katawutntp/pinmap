@@ -48,19 +48,21 @@ const getZoneLabel = (zone?: string) => {
 interface MapComponentProps {
   markers: MarkerData[];
   onMarkerFocus: (markerId: string) => void;
-  focusMarkerId?: string | null;
+  focusedMarkerIds?: string[];
   selectedZone?: string;
 }
 
 const defaultCenter: [number, number] = [13.7563, 100.5018]; // Bangkok, Thailand
 
 // Component to auto-center map when markers change
-function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerData[]; focusMarkerId?: string | null; selectedZone?: string }) {
+function MapUpdater({ markers, focusedMarkerIds, selectedZone }: { markers: MarkerData[]; focusedMarkerIds?: string[]; selectedZone?: string }) {
   const map = useMap();
   
   useEffect(() => {
-    if (focusMarkerId) {
-      const focused = markers.find(m => m.id === focusMarkerId);
+    if (focusedMarkerIds && focusedMarkerIds.length > 0) {
+      // Focus on the last added marker
+      const lastFocusId = focusedMarkerIds[focusedMarkerIds.length - 1];
+      const focused = markers.find(m => m.id === lastFocusId);
       if (focused) {
         map.flyTo([focused.lat, focused.lng], 15, { duration: 0.5 });
         return;
@@ -74,7 +76,7 @@ function MapUpdater({ markers, focusMarkerId, selectedZone }: { markers: MarkerD
         map.flyToBounds(bounds, { padding: [50, 50], duration: 0.5 });
       }
     }
-  }, [markers, map, focusMarkerId, selectedZone]);
+  }, [markers, map, focusedMarkerIds, selectedZone]);
 
   return null;
 }
@@ -198,7 +200,7 @@ const MarkerWithTooltip = ({
   );
 };
 
-export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZone }: MapComponentProps) => {
+export const MapComponent = ({ markers, onMarkerFocus, focusedMarkerIds, selectedZone }: MapComponentProps) => {
   return (
     <div className="map-card">
       <MapContainer
@@ -211,14 +213,14 @@ export const MapComponent = ({ markers, onMarkerFocus, focusMarkerId, selectedZo
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         
-        <MapUpdater markers={markers} focusMarkerId={focusMarkerId} selectedZone={selectedZone} />
+        <MapUpdater markers={markers} focusedMarkerIds={focusedMarkerIds} selectedZone={selectedZone} />
 
         {markers.map((marker, index) => (
           <MarkerWithTooltip
             key={marker.id}
             marker={marker}
             onMarkerFocus={onMarkerFocus}
-            isFocused={marker.id === focusMarkerId}
+            isFocused={focusedMarkerIds?.includes(marker.id) ?? false}
             tooltipIndex={index}
           />
         ))}
