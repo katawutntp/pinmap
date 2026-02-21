@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, updateDoc, doc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
 import { MarkerEditModal } from './components/MarkerEditModal';
@@ -44,26 +44,19 @@ function App() {
     setLoginError('');
     setLoginLoading(true);
     try {
-      // Query Firestore users collection directly (same Firebase project as Calendar)
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('username', '==', username));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
-        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      const res = await fetch(`${CALENDAR_API}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
       }
-      
-      const userDoc = snapshot.docs[0];
-      const userData = userDoc.data();
-      
-      if (userData.password !== password) {
-        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-      }
-      
-      localStorage.setItem('pinmapToken', `login_${Date.now()}`);
-      localStorage.setItem('pinmapUser', userData.username);
+      localStorage.setItem('pinmapToken', data.token);
+      localStorage.setItem('pinmapUser', data.username);
       setIsLoggedIn(true);
-      setLoggedInUser(userData.username);
+      setLoggedInUser(data.username);
       setUsername('');
       setPassword('');
     } catch (err: any) {
