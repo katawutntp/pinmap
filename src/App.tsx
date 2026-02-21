@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, updateDoc, doc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
 import { MarkerEditModal } from './components/MarkerEditModal';
@@ -9,6 +9,7 @@ import type { MarkerData } from './types';
 import './App.css';
 
 const CALENDAR_API = 'https://baanpoolvilla-calendar.vercel.app';
+const CALENDAR_BASE_URL = 'https://baanpoolvilla-calendar.vercel.app/?house=';
 
 function App() {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
@@ -43,20 +44,26 @@ function App() {
     setLoginError('');
     setLoginLoading(true);
     try {
-      const res = await fetch(`${CALENDAR_API}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'เข้าสู่ระบบล้มเหลว');
+      // Query Firestore users collection directly (same Firebase project as Calendar)
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', username));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
       }
-      const data = await res.json();
-      localStorage.setItem('pinmapToken', data.token);
-      localStorage.setItem('pinmapUser', data.username);
+      
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data();
+      
+      if (userData.password !== password) {
+        throw new Error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+      }
+      
+      localStorage.setItem('pinmapToken', `login_${Date.now()}`);
+      localStorage.setItem('pinmapUser', userData.username);
       setIsLoggedIn(true);
-      setLoggedInUser(data.username);
+      setLoggedInUser(userData.username);
       setUsername('');
       setPassword('');
     } catch (err: any) {
@@ -88,6 +95,16 @@ function App() {
 
   const normalizeKey = (value?: string | null) => (value || '').toLowerCase().trim();
 
+  const getHouseKeyFromLink = (link?: string | null) => {
+    if (!link) return '';
+    try {
+      const url = new URL(link);
+      return url.searchParams.get('house') || '';
+    } catch {
+      return '';
+    }
+  };
+
   const loadCalendarHouses = async () => {
     try {
       const res = await fetch(`${CALENDAR_API}/api/houses`);
@@ -115,6 +132,7 @@ function App() {
         if (house.location) {
           const coords = extractCoordinates(house.location);
           if (coords) {
+            const houseKey = house.name || house.code || '';
             const bedrooms = typeof house.bedrooms === 'number' ? house.bedrooms : parseInt(house.bedrooms || '0', 10);
             const bathrooms = typeof house.bathrooms === 'number' ? house.bathrooms : parseInt(house.bathrooms || '0', 10);
             calendarMarkers.push({
@@ -123,6 +141,7 @@ function App() {
               lng: coords.lng,
               name: house.name || '',
               googleMapsLink: house.location,
+              calendarLink: houseKey ? `${CALENDAR_BASE_URL}${encodeURIComponent(houseKey)}` : '',
               capacity: capacity || 0,
               bedrooms: bedrooms || 0,
               bathrooms: bathrooms || 0,
@@ -166,15 +185,17 @@ function App() {
   };
 
   // Save marker data
-  const handleSaveMarker = async (id: string, name: string) => {
+  const handleSaveMarker = async (id: string, name: string, calendarHouseKey: string) => {
     setLoading(true);
     try {
+      const trimmedKey = calendarHouseKey.trim();
+      const calendarLink = trimmedKey ? `${CALENDAR_BASE_URL}${encodeURIComponent(trimmedKey)}` : '';
       const markerRef = doc(db, 'markers', id);
-      await updateDoc(markerRef, { name });
+      await updateDoc(markerRef, { name, calendarLink });
 
       setMarkers(prev => prev.map(marker => 
         marker.id === id 
-          ? { ...marker, name }
+          ? { ...marker, name, calendarLink }
           : marker
       ));
       setSelectedMarker(null);
@@ -245,7 +266,8 @@ function App() {
 
   // Enrich markers with capacity from lookup
   const enrichMarker = (marker: MarkerData) => {
-    const capacity = houseLookup[normalizeKey(marker.name || '')];
+    const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+    const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
     return { ...marker, capacity };
   };
 

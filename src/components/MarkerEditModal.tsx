@@ -3,17 +3,29 @@ import type { MarkerData } from '../types';
 
 interface MarkerEditModalProps {
   marker: MarkerData | null;
-  onSave: (id: string, name: string) => void;
+  onSave: (id: string, name: string, calendarHouseKey: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
 }
 
+const getHouseKeyFromLink = (link?: string | null) => {
+  if (!link) return '';
+  try {
+    const url = new URL(link);
+    return url.searchParams.get('house') || '';
+  } catch {
+    return '';
+  }
+};
+
 export const MarkerEditModal = ({ marker, onSave, onDelete, onClose }: MarkerEditModalProps) => {
   const [name, setName] = useState('');
+  const [calendarHouseKey, setCalendarHouseKey] = useState('');
 
   useEffect(() => {
     if (marker) {
       setName(marker.name || '');
+      setCalendarHouseKey(getHouseKeyFromLink(marker.calendarLink));
     }
   }, [marker]);
 
@@ -21,7 +33,7 @@ export const MarkerEditModal = ({ marker, onSave, onDelete, onClose }: MarkerEdi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(marker.id, name);
+    onSave(marker.id, name, calendarHouseKey);
   };
 
   return (
@@ -43,6 +55,17 @@ export const MarkerEditModal = ({ marker, onSave, onDelete, onClose }: MarkerEdi
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ใส่ชื่อสถานที่"
+              className="field-input"
+            />
+          </div>
+
+          <div className="field">
+            <label className="field-label">ลิงก์ปฏิทิน (house key)</label>
+            <input
+              type="text"
+              value={calendarHouseKey}
+              onChange={(e) => setCalendarHouseKey(e.target.value)}
+              placeholder="เช่น Sunset House Poolvilla"
               className="field-input"
             />
           </div>
