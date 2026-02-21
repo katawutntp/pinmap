@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, updateDoc, doc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { MapComponent } from './components/MapComponent';
@@ -16,7 +16,15 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [focusedMarkerIds, setFocusedMarkerIds] = useState<string[]>([]);
   const [selectedZone, setSelectedZone] = useState<string>('all');
+  const [shareToast, setShareToast] = useState(false);
   const calendarBaseUrl = 'https://baanpoolvilla-calendar.vercel.app/?house=';
+
+  // Detect share mode from URL param ?marker=ID
+  const sharedMarkerId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('marker');
+  }, []);
+  const isShareMode = !!sharedMarkerId;
 
   // Load markers from Firebase on mount
   useEffect(() => {
@@ -156,8 +164,131 @@ function App() {
     }
   };
 
+  // Share a marker — copy shareable link to clipboard
+  const handleShareMarker = async (markerId: string) => {
+    const url = `${window.location.origin}${window.location.pathname}?marker=${encodeURIComponent(markerId)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2000);
+    }
+  };
+
+  // In share mode, show only the shared marker
+  const displayMarkers = useMemo(() => {
+    if (isShareMode && sharedMarkerId) {
+      const found = markers.find(m => m.id === sharedMarkerId);
+      return found ? [found] : [];
+    }
+    return markers;
+  }, [markers, isShareMode, sharedMarkerId]);
+
+  // Auto-focus shared marker
+  useEffect(() => {
+    if (isShareMode && sharedMarkerId && markers.length > 0) {
+      const found = markers.find(m => m.id === sharedMarkerId);
+      if (found) {
+        setFocusedMarkerIds([sharedMarkerId]);
+      }
+    }
+  }, [isShareMode, sharedMarkerId, markers]);
+
+  // Enrich markers with capacity from lookup
+  const enrichMarker = (marker: MarkerData) => {
+    const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
+    const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+    return { ...marker, capacity };
+  };
+
+  const filteredMarkers = displayMarkers
+    .filter(m => isShareMode || selectedZone === 'all' || m.zone === selectedZone)
+    .map(enrichMarker);
+
+  // === SHARE MODE: simplified view for customers ===
+  if (isShareMode) {
+    const sharedMarker = filteredMarkers[0];
+    return (
+      <div className="app share-mode">
+        <header className="app-header share-header">
+          <div className="brand">
+            <span className="brand-icon">🗺️</span>
+            <div>
+              <h1>{sharedMarker?.name || 'ตำแหน่งบ้านพัก'}</h1>
+              <p className="subtitle">BaanPoolVilla</p>
+            </div>
+          </div>
+          {sharedMarker && (
+            <div className="share-info-badges">
+              {typeof sharedMarker.capacity === 'number' && sharedMarker.capacity > 0 && (
+                <span className="share-badge">👥 {sharedMarker.capacity} คน</span>
+              )}
+              {typeof sharedMarker.bedrooms === 'number' && sharedMarker.bedrooms > 0 && (
+                <span className="share-badge">🛏️ {sharedMarker.bedrooms} ห้องนอน</span>
+              )}
+              {typeof sharedMarker.bathrooms === 'number' && sharedMarker.bathrooms > 0 && (
+                <span className="share-badge">🚿 {sharedMarker.bathrooms} ห้องน้ำ</span>
+              )}
+              {sharedMarker.zone && (
+                <span className="share-badge zone">
+                  {sharedMarker.zone === 'pattaya' ? '🏖️ พัทยา' :
+                   sharedMarker.zone === 'bangsaen' ? '🌊 บางแสน' :
+                   sharedMarker.zone === 'sattahip' ? '⚓ สัตหีบ' :
+                   sharedMarker.zone === 'rayong' ? '🏝️ ระยอง' : ''}
+                </span>
+              )}
+            </div>
+          )}
+        </header>
+
+        {!sharedMarker && !loading && (
+          <div className="alert error">ไม่พบข้อมูลหมุดนี้</div>
+        )}
+
+        <div className="content">
+          {loading && <div className="loading">กำลังโหลด...</div>}
+          <div className="map-layout share-map-layout">
+            <MapComponent
+              markers={filteredMarkers}
+              onMarkerFocus={() => {}}
+              focusedMarkerIds={focusedMarkerIds}
+              selectedZone="all"
+              isShareMode={true}
+            />
+          </div>
+          {sharedMarker?.googleMapsLink && (
+            <div className="share-navigate">
+              <a
+                href={sharedMarker.googleMapsLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-navigate"
+              >
+                🧭 นำทางด้วย Google Maps
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // === NORMAL MODE: full admin/staff view ===
   return (
     <div className="app">
+      {shareToast && (
+        <div className="share-toast">✅ คัดลอกลิงก์แชร์แล้ว!</div>
+      )}
+
       <header className="app-header">
         <div className="brand">
           <span className="brand-icon">🗺️</span>
@@ -183,7 +314,7 @@ function App() {
           </div>
           <div className="stat-card">
             <span className="stat-label">จำนวนหมุด</span>
-            <span className="stat-value">{markers.filter(m => selectedZone === 'all' || m.zone === selectedZone).length}</span>
+            <span className="stat-value">{filteredMarkers.length}</span>
           </div>
         </div>
       </header>
@@ -201,35 +332,25 @@ function App() {
 
         <div className="map-layout">
           <MarkerList
-            markers={markers
-              .filter(m => selectedZone === 'all' || m.zone === selectedZone)
-              .map(marker => {
-                const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
-                const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
-                return { ...marker, capacity };
-              })}
+            markers={filteredMarkers}
             onSelect={(marker) => setFocusedMarkerIds(prev => 
               prev.includes(marker.id) 
                 ? prev.filter(id => id !== marker.id) 
                 : [...prev, marker.id]
             )}
             onEdit={setSelectedMarker}
+            onShare={handleShareMarker}
             focusedMarkerIds={focusedMarkerIds}
             selectedZone={selectedZone}
           />
           <MapComponent 
-            markers={markers
-              .filter(m => selectedZone === 'all' || m.zone === selectedZone)
-              .map(marker => {
-                const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
-                const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
-                return { ...marker, capacity };
-              })} 
+            markers={filteredMarkers}
             onMarkerFocus={(markerId) => setFocusedMarkerIds(prev => 
               prev.includes(markerId) 
                 ? prev.filter(id => id !== markerId) 
                 : [...prev, markerId]
             )}
+            onShareMarker={handleShareMarker}
             focusedMarkerIds={focusedMarkerIds}
             selectedZone={selectedZone}
           />

@@ -4,11 +4,12 @@ interface MarkerListProps {
   markers: MarkerData[];
   onSelect: (marker: MarkerData) => void;
   onEdit: (marker: MarkerData) => void;
+  onShare: (markerId: string) => void;
   focusedMarkerIds?: string[];
   selectedZone?: string;
 }
 
-export const MarkerList = ({ markers, onSelect, onEdit, focusedMarkerIds, selectedZone }: MarkerListProps) => {
+export const MarkerList = ({ markers, onSelect, onEdit, onShare, focusedMarkerIds, selectedZone }: MarkerListProps) => {
   if (markers.length === 0) {
     return (
       <div className="marker-list empty">
@@ -67,16 +68,28 @@ export const MarkerList = ({ markers, onSelect, onEdit, focusedMarkerIds, select
                 )}
               </div>
             </div>
-            <button
-              className="item-edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(marker);
-              }}
-              title="แก้ไข"
-            >
-              ✏️
-            </button>
+            <div className="item-actions">
+              <button
+                className="item-share"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShare(marker.id);
+                }}
+                title="แชร์"
+              >
+                📤
+              </button>
+              <button
+                className="item-edit"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(marker);
+                }}
+                title="แก้ไข"
+              >
+                ✏️
+              </button>
+            </div>
           </div>
         ))}
       </div>

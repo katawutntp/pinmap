@@ -95,8 +95,10 @@ const spreadOverlappingMarkers = (markers: MarkerData[]): (MarkerData & { adjust
 interface MapComponentProps {
   markers: MarkerData[];
   onMarkerFocus: (markerId: string) => void;
+  onShareMarker?: (markerId: string) => void;
   focusedMarkerIds?: string[];
   selectedZone?: string;
+  isShareMode?: boolean;
 }
 
 const defaultCenter: [number, number] = [13.7563, 100.5018]; // Bangkok, Thailand
@@ -131,17 +133,21 @@ function MapUpdater({ markers, focusedMarkerIds, selectedZone }: { markers: Mark
 const MarkerWithTooltip = ({
   marker,
   onMarkerFocus,
+  onShareMarker,
   isFocused,
   tooltipDir,
   adjustedLat,
-  adjustedLng
+  adjustedLng,
+  isShareMode
 }: {
   marker: MarkerData;
   onMarkerFocus: (markerId: string) => void;
+  onShareMarker?: (markerId: string) => void;
   isFocused: boolean;
   tooltipDir: number;
   adjustedLat: number;
   adjustedLng: number;
+  isShareMode?: boolean;
 }) => {
   // Alternate tooltip direction and offset to prevent overlap
   const directions: Array<'right' | 'left' | 'top' | 'bottom'> = ['right', 'top', 'left', 'bottom'];
@@ -214,21 +220,9 @@ const MarkerWithTooltip = ({
         interactive={true}
       >
         <div className="tooltip-content">
-          {marker.calendarLink ? (
-            <a 
-              href={marker.calendarLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="tooltip-name"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
-            </a>
-          ) : (
-            <span className="tooltip-name">
-              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
-            </span>
-          )}
+          <span className="tooltip-name">
+            {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
+          </span>
           {isFocused && (
             <div className="tooltip-info">
               {typeof marker.capacity === 'number' && marker.capacity > 0 && (
@@ -243,6 +237,18 @@ const MarkerWithTooltip = ({
               {marker.zone && (
                 <span className="tooltip-zone">{getZoneLabel(marker.zone)}</span>
               )}
+              {!isShareMode && onShareMarker && (
+                <button
+                  className="tooltip-share-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShareMarker(marker.id);
+                  }}
+                  title="แชร์หมุดนี้"
+                >
+                  📤 แชร์
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -251,7 +257,7 @@ const MarkerWithTooltip = ({
   );
 };
 
-export const MapComponent = ({ markers, onMarkerFocus, focusedMarkerIds, selectedZone }: MapComponentProps) => {
+export const MapComponent = ({ markers, onMarkerFocus, onShareMarker, focusedMarkerIds, selectedZone, isShareMode }: MapComponentProps) => {
   // Spread overlapping markers
   const spreadMarkers = spreadOverlappingMarkers(markers);
   
@@ -274,10 +280,12 @@ export const MapComponent = ({ markers, onMarkerFocus, focusedMarkerIds, selecte
             key={marker.id}
             marker={marker}
             onMarkerFocus={onMarkerFocus}
+            onShareMarker={onShareMarker}
             isFocused={focusedMarkerIds?.includes(marker.id) ?? false}
             tooltipDir={marker.tooltipDir}
             adjustedLat={marker.adjustedLat}
             adjustedLng={marker.adjustedLng}
+            isShareMode={isShareMode}
           />
         ))}
       </MapContainer>
