@@ -8,6 +8,8 @@ import { extractCoordinates } from './utils/extractCoordinates';
 import type { MarkerData } from './types';
 import './App.css';
 
+const CALENDAR_API = 'https://baanpoolvilla-calendar.vercel.app';
+
 function App() {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [houseLookup, setHouseLookup] = useState<Record<string, number>>({});
@@ -17,7 +19,59 @@ function App() {
   const [focusedMarkerIds, setFocusedMarkerIds] = useState<string[]>([]);
   const [selectedZone, setSelectedZone] = useState<string>('all');
   const [shareToast, setShareToast] = useState(false);
-  const calendarBaseUrl = 'https://baanpoolvilla-calendar.vercel.app/?house=';
+
+  // Auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loggedInUser, setLoggedInUser] = useState('');
+
+  // Check saved login on mount
+  useEffect(() => {
+    const token = localStorage.getItem('pinmapToken');
+    const user = localStorage.getItem('pinmapUser');
+    if (token && user) {
+      setIsLoggedIn(true);
+      setLoggedInUser(user);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      const res = await fetch(`${CALENDAR_API}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'เข้าสู่ระบบล้มเหลว');
+      }
+      const data = await res.json();
+      localStorage.setItem('pinmapToken', data.token);
+      localStorage.setItem('pinmapUser', data.username);
+      setIsLoggedIn(true);
+      setLoggedInUser(data.username);
+      setUsername('');
+      setPassword('');
+    } catch (err: any) {
+      setLoginError(err.message || 'เข้าสู่ระบบล้มเหลว');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('pinmapToken');
+    localStorage.removeItem('pinmapUser');
+    setIsLoggedIn(false);
+    setLoggedInUser('');
+  };
 
   // Detect share mode from URL param ?marker=ID
   const sharedMarkerId = useMemo(() => {
@@ -34,19 +88,9 @@ function App() {
 
   const normalizeKey = (value?: string | null) => (value || '').toLowerCase().trim();
 
-  const getHouseKeyFromLink = (link?: string | null) => {
-    if (!link) return '';
-    try {
-      const url = new URL(link);
-      return url.searchParams.get('house') || '';
-    } catch (error) {
-      return '';
-    }
-  };
-
   const loadCalendarHouses = async () => {
     try {
-      const res = await fetch('https://baanpoolvilla-calendar.vercel.app/api/houses');
+      const res = await fetch(`${CALENDAR_API}/api/houses`);
       if (!res.ok) {
         console.error('Failed to fetch houses:', res.status);
         return;
@@ -71,7 +115,6 @@ function App() {
         if (house.location) {
           const coords = extractCoordinates(house.location);
           if (coords) {
-            const houseKey = house.name || house.code || '';
             const bedrooms = typeof house.bedrooms === 'number' ? house.bedrooms : parseInt(house.bedrooms || '0', 10);
             const bathrooms = typeof house.bathrooms === 'number' ? house.bathrooms : parseInt(house.bathrooms || '0', 10);
             calendarMarkers.push({
@@ -80,7 +123,6 @@ function App() {
               lng: coords.lng,
               name: house.name || '',
               googleMapsLink: house.location,
-              calendarLink: houseKey ? `${calendarBaseUrl}${encodeURIComponent(houseKey)}` : '',
               capacity: capacity || 0,
               bedrooms: bedrooms || 0,
               bathrooms: bathrooms || 0,
@@ -124,17 +166,15 @@ function App() {
   };
 
   // Save marker data
-  const handleSaveMarker = async (id: string, name: string, calendarHouseKey: string) => {
+  const handleSaveMarker = async (id: string, name: string) => {
     setLoading(true);
     try {
-      const trimmedKey = calendarHouseKey.trim();
-      const calendarLink = trimmedKey ? `${calendarBaseUrl}${encodeURIComponent(trimmedKey)}` : '';
       const markerRef = doc(db, 'markers', id);
-      await updateDoc(markerRef, { name, calendarLink });
+      await updateDoc(markerRef, { name });
 
       setMarkers(prev => prev.map(marker => 
         marker.id === id 
-          ? { ...marker, name, calendarLink }
+          ? { ...marker, name }
           : marker
       ));
       setSelectedMarker(null);
@@ -205,8 +245,7 @@ function App() {
 
   // Enrich markers with capacity from lookup
   const enrichMarker = (marker: MarkerData) => {
-    const key = getHouseKeyFromLink(marker.calendarLink) || marker.name || '';
-    const capacity = houseLookup[normalizeKey(key)] ?? houseLookup[normalizeKey(marker.name || '')];
+    const capacity = houseLookup[normalizeKey(marker.name || '')];
     return { ...marker, capacity };
   };
 
@@ -282,6 +321,50 @@ function App() {
     );
   }
 
+  // === LOGIN SCREEN ===
+  if (!isShareMode && !isLoggedIn) {
+    return (
+      <div className="login-page">
+        <div className="login-card">
+          <div className="login-brand">
+            <span className="brand-icon">🗺️</span>
+            <h1>แผนที่ปักหมุด</h1>
+            <p className="subtitle">BaanPoolVilla</p>
+          </div>
+          <form onSubmit={handleLogin} className="login-form">
+            {loginError && <div className="login-error">{loginError}</div>}
+            <div className="field">
+              <label className="field-label">ชื่อผู้ใช้</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
+                className="field-input"
+                required
+                autoFocus
+              />
+            </div>
+            <div className="field">
+              <label className="field-label">รหัสผ่าน</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="field-input"
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary login-btn" disabled={loginLoading}>
+              {loginLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   // === NORMAL MODE: full admin/staff view ===
   return (
     <div className="app">
@@ -315,6 +398,10 @@ function App() {
           <div className="stat-card">
             <span className="stat-label">จำนวนหมุด</span>
             <span className="stat-value">{filteredMarkers.length}</span>
+          </div>
+          <div className="user-info">
+            <span className="user-badge">👤 {loggedInUser}</span>
+            <button className="btn btn-logout" onClick={handleLogout}>ออกจากระบบ</button>
           </div>
         </div>
       </header>
