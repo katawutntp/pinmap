@@ -15,7 +15,8 @@ function App() {
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [houseLookup, setHouseLookup] = useState<Record<string, number>>({});
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [calendarLoading, setCalendarLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [focusedMarkerIds, setFocusedMarkerIds] = useState<string[]>([]);
   const [selectedZone, setSelectedZone] = useState<string>('all');
@@ -100,6 +101,7 @@ function App() {
 
   const loadCalendarHouses = async () => {
     try {
+      setCalendarLoading(true);
       const res = await fetch(`${CALENDAR_API}/api/houses`);
       if (!res.ok) {
         console.error('Failed to fetch houses:', res.status);
@@ -156,6 +158,8 @@ function App() {
       });
     } catch (error) {
       console.error('Error loading calendar houses:', error);
+    } finally {
+      setCalendarLoading(false);
     }
   };
 
@@ -304,12 +308,12 @@ function App() {
           )}
         </header>
 
-        {!sharedMarker && !loading && (
+        {!sharedMarker && !loading && !calendarLoading && (
           <div className="alert error">ไม่พบข้อมูลหมุดนี้</div>
         )}
 
         <div className="content">
-          {loading && <div className="loading">กำลังโหลด...</div>}
+          {(loading || calendarLoading) && <div className="loading">กำลังโหลด...</div>}
           <div className="map-layout share-map-layout">
             <MapComponent
               markers={filteredMarkers}
@@ -319,18 +323,7 @@ function App() {
               isShareMode={true}
             />
           </div>
-          {sharedMarker?.googleMapsLink && (
-            <div className="share-navigate">
-              <a
-                href={sharedMarker.googleMapsLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-navigate"
-              >
-                🧭 นำทางด้วย Google Maps
-              </a>
-            </div>
-          )}
+
         </div>
       </div>
     );
