@@ -220,15 +220,19 @@ const MarkerWithTooltip = ({
         interactive={true}
       >
         <div className="tooltip-content">
-          {!isShareMode && marker.calendarLink ? (
-            <a className="tooltip-name" href={marker.calendarLink} target="_blank" rel="noopener noreferrer">
-              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
-            </a>
-          ) : (
-            <span className="tooltip-name">
-              {isFocused ? marker.name : (marker.name?.substring(0, 12) + (marker.name && marker.name.length > 12 ? '...' : '')) || 'ไม่มีชื่อ'}
-            </span>
-          )}
+          {(() => {
+            const displayName = marker.apiCode || marker.name || 'ไม่มีชื่อ';
+            const shortName = displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName;
+            const shownName = isFocused ? displayName : shortName;
+            if (!isShareMode && marker.calendarLink) {
+              return (
+                <a className="tooltip-name" href={marker.calendarLink} target="_blank" rel="noopener noreferrer">
+                  {shownName}
+                </a>
+              );
+            }
+            return <span className="tooltip-name">{shownName}</span>;
+          })()}
           {isFocused && (
             <div className="tooltip-info">
               {typeof marker.capacity === 'number' && marker.capacity > 0 && (
