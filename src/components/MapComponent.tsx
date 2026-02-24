@@ -221,7 +221,7 @@ const MarkerWithTooltip = ({
       >
         <div className="tooltip-content">
           {(() => {
-            const displayName = marker.apiCode || marker.name || 'ไม่มีชื่อ';
+            const displayName = isShareMode ? (marker.apiCode || marker.name || 'ไม่มีชื่อ') : (marker.name || 'ไม่มีชื่อ');
             const shortName = displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName;
             const shownName = isFocused ? displayName : shortName;
             if (!isShareMode && marker.calendarLink) {
