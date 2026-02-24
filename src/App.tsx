@@ -135,6 +135,7 @@ function App() {
               lat: coords.lat,
               lng: coords.lng,
               name: house.name || '',
+              apiCode: house.apiCode || '',
               googleMapsLink: house.location,
               calendarLink: houseKey ? `${CALENDAR_BASE_URL}${encodeURIComponent(houseKey)}` : '',
               capacity: capacity || 0,
@@ -281,7 +282,7 @@ function App() {
           <div className="brand">
             <span className="brand-icon">🗺️</span>
             <div>
-              <h1>{sharedMarker?.name || 'ตำแหน่งบ้านพัก'}</h1>
+              <h1>{sharedMarker?.apiCode || sharedMarker?.name || 'ตำแหน่งบ้านพัก'}</h1>
               <p className="subtitle">BaanPoolVilla</p>
             </div>
           </div>

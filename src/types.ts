@@ -3,6 +3,7 @@ export interface MarkerData {
   lat: number;
   lng: number;
   name?: string;
+  apiCode?: string;
   googleMapsLink: string;
   calendarLink?: string;
   capacity?: number;
